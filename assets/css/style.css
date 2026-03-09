@@ -1,0 +1,13 @@
+body{background:#f4f8ff}
+.hero{background:linear-gradient(135deg,#0f172a,#1d4ed8);position:relative}
+.hero:after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(56,189,248,.35),transparent 40%)}
+.hero .container{position:relative;z-index:2}
+.stat{border-left:4px solid #2563eb}
+.chat-box{height:320px;overflow:auto;background:#fff;border:1px solid #dbeafe;border-radius:8px;padding:10px}
+
+/* WordPress-like admin shell */
+.wp-shell{display:grid;grid-template-columns:260px 1fr;gap:0;background:#fff;border:1px solid #dce3ef;border-radius:14px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.08)}
+.wp-sidebar{background:linear-gradient(180deg,#1f2937,#111827);color:#fff;min-height:100%}
+.wp-main{background:#f8fafc}
+.wp-main .card{border:1px solid #e2e8f0;border-radius:12px}
+@media (max-width: 960px){.wp-shell{grid-template-columns:1fr}.wp-sidebar{border-bottom:1px solid rgba(255,255,255,.2)}}
