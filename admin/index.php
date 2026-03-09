@@ -6,16 +6,19 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['create_event'])){ $pdo->
 if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['create_alert'])){ $pdo->prepare('INSERT INTO fraud_alerts(title,message,severity,is_active) VALUES(?,?,?,1)')->execute([trim($_POST['title']),trim($_POST['message']),trim($_POST['severity'])]); }
 if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['create_admin'])){ if(!is_super_admin_logged_in()){ http_response_code(403); exit('Only super admin can create admins'); } $pdo->prepare('INSERT INTO admin(name,email,password_hash,role) VALUES(?,?,?,?)')->execute([trim($_POST['name']), trim($_POST['email']), password_hash($_POST['password'], PASSWORD_BCRYPT), trim($_POST['role'])==='super_admin'?'super_admin':'admin']); }
 
-$complaints=$pdo->query('SELECT * FROM complaints ORDER BY id DESC')->fetchAll();
-$pending=$pdo->query('SELECT * FROM volunteers WHERE approval_status="pending"')->fetchAll();
-$approved=$pdo->query('SELECT * FROM volunteers WHERE approval_status="approved"')->fetchAll();
-$qcount=(int)$pdo->query('SELECT COUNT(*) FROM quiz_questions')->fetchColumn();
-$users=(int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
-$events=(int)$pdo->query('SELECT COUNT(*) FROM events')->fetchColumn();
-$alerts=$pdo->query('SELECT * FROM fraud_alerts ORDER BY id DESC LIMIT 10')->fetchAll();
-$admins=$pdo->query('SELECT id,name,email,role FROM admin ORDER BY id DESC')->fetchAll();
-$emails=$pdo->query('SELECT * FROM email_logs ORDER BY id DESC LIMIT 10')->fetchAll();
-$leaderboard=$pdo->query('SELECT participant_name,MAX(score) as score FROM quiz_results GROUP BY participant_name ORDER BY score DESC LIMIT 10')->fetchAll();
+
+$qall=function(string $sql) use ($pdo): array{ try{return $pdo->query($sql)->fetchAll();}catch(Throwable $e){return [];} };
+$qscalar=function(string $sql) use ($pdo): int{ try{return (int)$pdo->query($sql)->fetchColumn();}catch(Throwable $e){return 0;} };
+$complaints=$qall('SELECT * FROM complaints ORDER BY id DESC');
+$pending=$qall('SELECT * FROM volunteers WHERE approval_status="pending"');
+$approved=$qall('SELECT * FROM volunteers WHERE approval_status="approved"');
+$quizQuestionCount=$qscalar('SELECT COUNT(*) FROM quiz_questions');
+$users=$qscalar('SELECT COUNT(*) FROM users');
+$events=$qscalar('SELECT COUNT(*) FROM events');
+$alerts=$qall('SELECT * FROM fraud_alerts ORDER BY id DESC LIMIT 10');
+$admins=$qall('SELECT id,name,email,role FROM admin ORDER BY id DESC');
+$emails=$qall('SELECT * FROM email_logs ORDER BY id DESC LIMIT 10');
+$leaderboard=$qall('SELECT participant_name,MAX(score) as score FROM quiz_results GROUP BY participant_name ORDER BY score DESC LIMIT 10');
 include __DIR__ . '/../includes/header.php'; ?>
 <div class="container py-4"><div class="wp-shell">
 <aside class="wp-sidebar p-3">
@@ -25,7 +28,7 @@ include __DIR__ . '/../includes/header.php'; ?>
 </aside>
 <section class="wp-main p-4">
 <h2 id="dashboard">Dashboard</h2>
-<div class="row g-3 mb-4"><div class="col-md-2"><div class="card p-3"><strong><?= $users ?></strong><span>Total Users</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= count($complaints) ?></strong><span>Total Complaints</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= count($approved) ?></strong><span>Active Volunteers</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= (int)$pdo->query('SELECT COUNT(*) FROM quiz_results')->fetchColumn() ?></strong><span>Quiz Participants</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= (int)$pdo->query('SELECT COUNT(*) FROM quiz_results')->fetchColumn() ?></strong><span>Certificates</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= (int)$pdo->query('SELECT COUNT(*) FROM fraud_alerts WHERE is_active=1')->fetchColumn() ?></strong><span>Fraud Alerts</span></div></div></div>
+<div class="row g-3 mb-4"><div class="col-md-2"><div class="card p-3"><strong><?= $users ?></strong><span>Total Users</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= count($complaints) ?></strong><span>Total Complaints</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= count($approved) ?></strong><span>Active Volunteers</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= $qscalar('SELECT COUNT(*) FROM quiz_results') ?></strong><span>Quiz Participants</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= $qscalar('SELECT COUNT(*) FROM quiz_results') ?></strong><span>Certificates</span></div></div><div class="col-md-2"><div class="card p-3"><strong><?= $qscalar('SELECT COUNT(*) FROM fraud_alerts WHERE is_active=1') ?></strong><span>Fraud Alerts</span></div></div></div>
 
 <h4 id="volunteers">Approve Volunteers</h4><?php foreach($pending as $p): ?><div class="card p-2 mb-2"><?= e($p['name']) ?> (<?= e($p['email']) ?>) <a class="btn btn-sm btn-success" href="?approve_volunteer=<?= (int)$p['id'] ?>&csrf_token=<?= e(csrf_token()) ?>">Approve</a></div><?php endforeach; ?>
 <h4 id="complaints" class="mt-4">Assign Complaints</h4><form method="post" class="row g-2"><?= csrf_input() ?><input type="hidden" name="assign_case" value="1"><div class="col-md-5"><select name="complaint_id" class="form-select"><?php foreach($complaints as $c): ?><option value="<?= (int)$c['id'] ?>">#<?= (int)$c['id'] ?> <?= e($c['user_name']) ?> - <?= e($c['fraud_type']) ?></option><?php endforeach; ?></select></div><div class="col-md-5"><select name="volunteer_id" class="form-select"><?php foreach($approved as $v): ?><option value="<?= (int)$v['id'] ?>"><?= e($v['name']) ?></option><?php endforeach; ?></select></div><div class="col-md-2"><button class="btn btn-primary w-100">Assign</button></div></form>
