@@ -1,0 +1,7 @@
+{
+  "name": "cybersathi/platform",
+  "description": "Cyber Sathi awareness platform",
+  "require": {
+    "tecnickcom/tcpdf": "^6.7"
+  }
+}
