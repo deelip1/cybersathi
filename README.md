@@ -49,3 +49,8 @@ Additional website: https://cybersathi.my.canva.site/
 - Public pages: `/index.php`, `/complaint.php`, `/quiz.php`, `/live-chat.php`
 - Auth: `/login.php`, `/register.php`, `/volunteer-login.php`
 - Dashboards: `/user-dashboard.php`, `/volunteer-dashboard.php`, `/admin/index.php`
+
+
+## Automatic Bootstrap
+- On startup, the app auto-creates required tables and seed records for both MySQL and SQLite modes.
+- MySQL remains primary; SQLite fallback is used automatically when MySQL is unavailable.
