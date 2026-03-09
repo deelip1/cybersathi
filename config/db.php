@@ -63,6 +63,9 @@ function bootstrap_sqlite(PDO $pdo): void {
   $pdo->exec("CREATE TABLE IF NOT EXISTS feedback(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,email TEXT,message TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS fraud_patterns(id INTEGER PRIMARY KEY AUTOINCREMENT,pattern_type TEXT,pattern_value TEXT,frequency INTEGER DEFAULT 1,last_seen TEXT DEFAULT CURRENT_TIMESTAMP)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS fraud_reports(id INTEGER PRIMARY KEY AUTOINCREMENT,state_name TEXT,city_name TEXT,fraud_type TEXT,count_reports INTEGER DEFAULT 1,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
+  try{$pdo->exec('ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 0');}catch(Throwable $e){}
+  try{$pdo->exec('ALTER TABLE events ADD COLUMN thumbnail TEXT');}catch(Throwable $e){}
+  try{$pdo->exec('ALTER TABLE videos ADD COLUMN thumbnail TEXT');}catch(Throwable $e){}
   base_seed($pdo);
 }
 

@@ -24,7 +24,7 @@ function is_volunteer_logged_in(): bool { return isset($_SESSION['volunteer_id']
 function ensure_admin(): void { if (!is_admin_logged_in()) { header('Location: /admin/login.php'); exit; } }
 function ensure_user(): void { if (!is_user_logged_in()) { header('Location: /login.php?next=quiz&msg=' . urlencode('Please register or login to participate in Cyber Awareness Quiz.')); exit; } }
 function ensure_volunteer(): void { if (!is_volunteer_logged_in()) { header('Location: /volunteer-login.php'); exit; } }
-function e(string $v): string { return htmlspecialchars($v, ENT_QUOTES, 'UTF-8'); }
+function e($v): string { return htmlspecialchars((string)($v ?? ''), ENT_QUOTES, 'UTF-8'); }
 
 function csrf_token(): string {
     if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -57,12 +57,12 @@ function send_mail_smart(array $smtp, string $to, string $toName, string $subjec
         try {
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
             $mail->isSMTP();
-            $mail->Host = $smtp['host'] ?: 'smtp.gmail.com';
+            $mail->Host = ($smtp['smtp_host'] ?? ($smtp['host'] ?? '')) ?: 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-            $mail->Username = $smtp['username'] ?? '';
-            $mail->Password = $smtp['password'] ?? '';
-            $mail->Port = (int)($smtp['port'] ?: 587);
-            $enc = strtolower((string)($smtp['encryption'] ?? 'tls'));
+            $mail->Username = $smtp['smtp_username'] ?? ($smtp['username'] ?? '');
+            $mail->Password = $smtp['smtp_password'] ?? ($smtp['password'] ?? '');
+            $mail->Port = (int)(($smtp['smtp_port'] ?? ($smtp['port'] ?? 587)));
+            $enc = strtolower((string)(($smtp['encryption'] ?? 'tls')));
             $mail->SMTPSecure = $enc === 'ssl' ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
             $mail->setFrom($smtp['sender_email'] ?: PRIMARY_EMAIL, $smtp['sender_name'] ?: APP_NAME);
             $mail->addAddress($to, $toName);
