@@ -4,10 +4,8 @@ $q=$pdo->query("SELECT * FROM quiz_questions ORDER BY $order LIMIT 10")->fetchAl
 ?>
 <div class="container py-5">
   <h2>Cyber Awareness Quiz</h2>
-  <?php if(isset($_GET['welcome'])): ?><div class="alert alert-success">Registration completed! Please play the quiz to receive your Cyber Sathi certificate.</div><?php endif; ?>
   <p id="timer" class="fw-bold text-danger">Timer: 300s</p>
   <form method="post" action="/api/quiz_submit.php" id="quizForm">
-    <?= csrf_input() ?>
     <input type="hidden" name="participant_name" value="<?= e($_SESSION['user_name'] ?? 'Guest Participant') ?>">
     <?php foreach($q as $i=>$row): ?>
       <div class="card p-3 mb-3">

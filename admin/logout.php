@@ -1,1 +1,1 @@
-<?php require_once __DIR__ . '/../config/config.php'; unset($_SESSION['admin_id'],$_SESSION['admin_name'],$_SESSION['admin_role']); header('Location: /admin/login.php');
+<?php require_once __DIR__ . '/../config/config.php'; session_destroy(); header('Location: /admin/login.php');
