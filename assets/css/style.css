@@ -1,0 +1,6 @@
+body{background:#f4f8ff}
+.hero{background:linear-gradient(135deg,#0f172a,#1d4ed8);position:relative}
+.hero:after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(56,189,248,.35),transparent 40%)}
+.hero .container{position:relative;z-index:2}
+.stat{border-left:4px solid #2563eb}
+.chat-box{height:320px;overflow:auto;background:#fff;border:1px solid #dbeafe;border-radius:8px;padding:10px}
