@@ -11,46 +11,75 @@ Additional website: https://cybersathi.my.canva.site/
 - jaiswaldilip8@gmail.com
 - +91 8889473954
 
-## Production Architecture
-- Frontend: PHP + Bootstrap 5 + JavaScript
-- Backend: Core PHP + PDO
-- Database: MySQL (primary) + SQLite (local fallback)
-- PDF: TCPDF integration in `certificate.php`
-- Realtime chat: Firebase Firestore realtime stream with API fallback
+## Production-Ready Architecture
+- **Frontend:** PHP + Bootstrap 5 + JavaScript (AJAX)
+- **Backend:** Core PHP (PDO prepared statements)
+- **Database:** MySQL (`database/cybersathi.sql`)
+- **Security:** prepared statements, password hashing, upload validation hooks, session-based auth
+- **Chat:** polling-based real-time support with extensible API
+- **Certificate:** printable certificate page (TCPDF-ready integration point)
+- **Mobile App:** React Native starter under `mobile-app/`
 
-## Security Implemented
-- Google reCAPTCHA verification (register/complaint/volunteer forms)
-- CSRF token generation and validation across forms and protected APIs
-- Session auth for admin/user/volunteer roles
-- Prepared statements and password hashing
-- Upload type/size validation for complaint evidence
+## Core Features Implemented
+1. Home page with CTA buttons and live counters
+2. Founder/Campaign About page
+3. Cyber complaint registration with evidence upload
+4. Volunteer registration and admin approval
+5. Live chat interface + message API
+6. AI guidance page for fraud-response steps
+7. Quiz engine with random questions + timer + scoring
+8. Certificate page (print/download PDF via browser)
+9. Media/events pages (seminars/webinars/news/videos)
+10. Admin dashboard for approvals, assignments, analytics, and event publishing
 
-## Role-Based Dashboards
-- User Dashboard: `user-dashboard.php` (quiz history + certificate download)
-- Volunteer Dashboard: `volunteer-dashboard.php` (assigned fraud cases)
-- Admin Dashboard: `admin/index.php` (approvals, assignments, event publishing)
+## Folder Structure
+```
+cyber-sathi/
+  index.php
+  about.php
+  contact.php
+  register.php
+  login.php
+  complaint.php
+  volunteer.php
+  quiz.php
+  certificate.php
+  live-chat.php
+  ai-guidance.php
+  media.php
+  admin/
+  api/
+  config/
+  includes/
+  assets/css
+  assets/js
+  assets/images
+  uploads/
+  database/cybersathi.sql
+  mobile-app/
+```
 
-## Setup
-1. Import DB:
+## Installation
+1. Create MySQL DB and import schema:
    ```bash
    mysql -u root -p < database/cybersathi.sql
    ```
-2. Install TCPDF:
-   ```bash
-   composer install
-   ```
-3. Configure env vars (or webserver variables):
-   - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`
-   - `RECAPTCHA_SITE_KEY`, `RECAPTCHA_SECRET_KEY`
-   - `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`
-4. Serve with Apache/Nginx + PHP 8.1+.
+2. Configure DB credentials in `config/db.php` or env vars (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`).
+3. Serve using Apache/Nginx + PHP 8.1+.
+4. Open `/admin/login.php`.
 
-## Important Paths
-- Public pages: `/index.php`, `/complaint.php`, `/quiz.php`, `/live-chat.php`
-- Auth: `/login.php`, `/register.php`, `/volunteer-login.php`
-- Dashboards: `/user-dashboard.php`, `/volunteer-dashboard.php`, `/admin/index.php`
+## Default Admin
+- Email: `admin@cybersathi.org`
+- Password hash seeded in SQL (change immediately in production)
 
+## Next hardening checklist
+- Replace placeholder captcha with Google reCAPTCHA
+- Add CSRF tokens on all forms
+- Integrate TCPDF in `certificate.php` for server-side PDF generation
+- Integrate WebSocket/Firebase for true realtime chat
+- Add role-based dashboards for volunteers and users
 
-## Automatic Bootstrap
-- On startup, the app auto-creates required tables and seed records for both MySQL and SQLite modes.
-- MySQL remains primary; SQLite fallback is used automatically when MySQL is unavailable.
+## Repository policy
+- Binary runtime DB files are not committed.
+- `database/cybersathi.sqlite` is generated locally at runtime when MySQL is unavailable.
+- `.gitignore` excludes SQLite artifacts and upload files.

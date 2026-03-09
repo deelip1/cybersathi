@@ -6,7 +6,6 @@ $q=$pdo->query("SELECT * FROM quiz_questions ORDER BY $order LIMIT 10")->fetchAl
   <h2>Cyber Awareness Quiz</h2>
   <p id="timer" class="fw-bold text-danger">Timer: 300s</p>
   <form method="post" action="/api/quiz_submit.php" id="quizForm">
-    <?= csrf_input() ?>
     <input type="hidden" name="participant_name" value="<?= e($_SESSION['user_name'] ?? 'Guest Participant') ?>">
     <?php foreach($q as $i=>$row): ?>
       <div class="card p-3 mb-3">

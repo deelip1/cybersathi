@@ -27,7 +27,6 @@ CREATE TABLE volunteers (
   city VARCHAR(100) NOT NULL,
   skills VARCHAR(255) NOT NULL,
   occupation VARCHAR(120) NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
   approval_status ENUM('pending','approved','rejected') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
