@@ -19,11 +19,11 @@ function base_seed(PDO $pdo): void {
 
 function bootstrap_mysql(PDO $pdo): void {
   $pdo->exec("CREATE TABLE IF NOT EXISTS admin(id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(120),email VARCHAR(160) UNIQUE,password_hash VARCHAR(255),role ENUM('admin','super_admin') DEFAULT 'admin',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-  $pdo->exec("CREATE TABLE IF NOT EXISTS users(id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(120),email VARCHAR(160) UNIQUE,mobile VARCHAR(20),city VARCHAR(100),password_hash VARCHAR(255),is_verified TINYINT DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS users(id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(120),email VARCHAR(160) UNIQUE,mobile VARCHAR(20),city VARCHAR(100),password_hash VARCHAR(255),login_type ENUM('normal','google') DEFAULT 'normal',is_verified TINYINT DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   $pdo->exec("CREATE TABLE IF NOT EXISTS volunteers(id INT AUTO_INCREMENT PRIMARY KEY,name VARCHAR(120),email VARCHAR(160) UNIQUE,mobile VARCHAR(20),city VARCHAR(100),skills VARCHAR(255),occupation VARCHAR(120),password_hash VARCHAR(255),approval_status ENUM('pending','approved','rejected') DEFAULT 'pending',volunteer_role ENUM('Cyber Pioneer','Cyber Volunteer','Cyber Mentor','Cyber Trainer') DEFAULT 'Cyber Volunteer',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   $pdo->exec("CREATE TABLE IF NOT EXISTS complaints(id INT AUTO_INCREMENT PRIMARY KEY,user_name VARCHAR(120),mobile VARCHAR(20),email VARCHAR(160),city VARCHAR(100),fraud_type VARCHAR(120),description TEXT,suspected_source VARCHAR(255),evidence_path VARCHAR(255),status ENUM('open','in_progress','closed') DEFAULT 'open',assigned_to INT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY (assigned_to) REFERENCES volunteers(id) ON DELETE SET NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   $pdo->exec("CREATE TABLE IF NOT EXISTS quiz_questions(id INT AUTO_INCREMENT PRIMARY KEY,question TEXT,option_1 VARCHAR(255),option_2 VARCHAR(255),option_3 VARCHAR(255),option_4 VARCHAR(255),correct_option TINYINT,category VARCHAR(100),created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-  $pdo->exec("CREATE TABLE IF NOT EXISTS quiz_results(id INT AUTO_INCREMENT PRIMARY KEY,user_id INT NULL,participant_name VARCHAR(120),score INT,total_questions INT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS quiz_results(id INT AUTO_INCREMENT PRIMARY KEY,user_id INT NULL,participant_name VARCHAR(120),participant_email VARCHAR(180),participant_city VARCHAR(120),score INT,total_questions INT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   $pdo->exec("CREATE TABLE IF NOT EXISTS chat_messages(id INT AUTO_INCREMENT PRIMARY KEY,complaint_id INT NULL,sender_role ENUM('visitor','volunteer','admin') NOT NULL,sender_name VARCHAR(120),message TEXT,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   $pdo->exec("CREATE TABLE IF NOT EXISTS events(id INT AUTO_INCREMENT PRIMARY KEY,event_type ENUM('Seminar','Webinar','News','Media') NOT NULL,title VARCHAR(180),description TEXT,event_date DATE,location VARCHAR(150),thumbnail VARCHAR(255),created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   $pdo->exec("CREATE TABLE IF NOT EXISTS videos(id INT AUTO_INCREMENT PRIMARY KEY,title VARCHAR(180),video_url VARCHAR(255),thumbnail VARCHAR(255),category VARCHAR(100) DEFAULT 'Awareness',created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -38,18 +38,21 @@ function bootstrap_mysql(PDO $pdo): void {
   $pdo->exec("CREATE TABLE IF NOT EXISTS fraud_patterns(id INT AUTO_INCREMENT PRIMARY KEY,pattern_type VARCHAR(80),pattern_value VARCHAR(255),frequency INT DEFAULT 1,last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   $pdo->exec("CREATE TABLE IF NOT EXISTS fraud_reports(id INT AUTO_INCREMENT PRIMARY KEY,state_name VARCHAR(120),city_name VARCHAR(120),fraud_type VARCHAR(120),count_reports INT DEFAULT 1,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   try{$pdo->exec('ALTER TABLE users ADD COLUMN is_verified TINYINT DEFAULT 0');}catch(Throwable $e){}
+  try{$pdo->exec("ALTER TABLE users ADD COLUMN login_type ENUM('normal','google') DEFAULT 'normal'");}catch(Throwable $e){}
   try{$pdo->exec('ALTER TABLE events ADD COLUMN thumbnail VARCHAR(255)');}catch(Throwable $e){}
   try{$pdo->exec('ALTER TABLE videos ADD COLUMN thumbnail VARCHAR(255)');}catch(Throwable $e){}
+  try{$pdo->exec('ALTER TABLE quiz_results ADD COLUMN participant_email VARCHAR(180) NULL');}catch(Throwable $e){}
+  try{$pdo->exec('ALTER TABLE quiz_results ADD COLUMN participant_city VARCHAR(120) NULL');}catch(Throwable $e){}
   base_seed($pdo);
 }
 
 function bootstrap_sqlite(PDO $pdo): void {
   $pdo->exec("CREATE TABLE IF NOT EXISTS admin(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,email TEXT UNIQUE,password_hash TEXT,role TEXT DEFAULT 'admin',created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
-  $pdo->exec("CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,email TEXT UNIQUE,mobile TEXT,city TEXT,password_hash TEXT,is_verified INTEGER DEFAULT 0,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,email TEXT UNIQUE,mobile TEXT,city TEXT,password_hash TEXT,login_type TEXT DEFAULT 'normal',is_verified INTEGER DEFAULT 0,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS volunteers(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,email TEXT UNIQUE,mobile TEXT,city TEXT,skills TEXT,occupation TEXT,password_hash TEXT,approval_status TEXT DEFAULT 'pending',volunteer_role TEXT DEFAULT 'Cyber Volunteer',created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS complaints(id INTEGER PRIMARY KEY AUTOINCREMENT,user_name TEXT,mobile TEXT,email TEXT,city TEXT,fraud_type TEXT,description TEXT,suspected_source TEXT,evidence_path TEXT,status TEXT DEFAULT 'open',assigned_to INTEGER,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS quiz_questions(id INTEGER PRIMARY KEY AUTOINCREMENT,question TEXT,option_1 TEXT,option_2 TEXT,option_3 TEXT,option_4 TEXT,correct_option INTEGER,category TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
-  $pdo->exec("CREATE TABLE IF NOT EXISTS quiz_results(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER,participant_name TEXT,score INTEGER,total_questions INTEGER,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
+  $pdo->exec("CREATE TABLE IF NOT EXISTS quiz_results(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER,participant_name TEXT,participant_email TEXT,participant_city TEXT,score INTEGER,total_questions INTEGER,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS chat_messages(id INTEGER PRIMARY KEY AUTOINCREMENT,complaint_id INTEGER,sender_role TEXT,sender_name TEXT,message TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT,event_type TEXT,title TEXT,description TEXT,event_date TEXT,location TEXT,thumbnail TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS videos(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT,video_url TEXT,thumbnail TEXT,category TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
@@ -64,8 +67,11 @@ function bootstrap_sqlite(PDO $pdo): void {
   $pdo->exec("CREATE TABLE IF NOT EXISTS fraud_patterns(id INTEGER PRIMARY KEY AUTOINCREMENT,pattern_type TEXT,pattern_value TEXT,frequency INTEGER DEFAULT 1,last_seen TEXT DEFAULT CURRENT_TIMESTAMP)");
   $pdo->exec("CREATE TABLE IF NOT EXISTS fraud_reports(id INTEGER PRIMARY KEY AUTOINCREMENT,state_name TEXT,city_name TEXT,fraud_type TEXT,count_reports INTEGER DEFAULT 1,created_at TEXT DEFAULT CURRENT_TIMESTAMP)");
   try{$pdo->exec('ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 0');}catch(Throwable $e){}
+  try{$pdo->exec("ALTER TABLE users ADD COLUMN login_type TEXT DEFAULT 'normal'");}catch(Throwable $e){}
   try{$pdo->exec('ALTER TABLE events ADD COLUMN thumbnail TEXT');}catch(Throwable $e){}
   try{$pdo->exec('ALTER TABLE videos ADD COLUMN thumbnail TEXT');}catch(Throwable $e){}
+  try{$pdo->exec('ALTER TABLE quiz_results ADD COLUMN participant_email TEXT');}catch(Throwable $e){}
+  try{$pdo->exec('ALTER TABLE quiz_results ADD COLUMN participant_city TEXT');}catch(Throwable $e){}
   base_seed($pdo);
 }
 

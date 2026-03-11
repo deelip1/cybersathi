@@ -7,8 +7,8 @@ $r=$stmt->fetch();
 if(!$r){http_response_code(404);exit('Result not found');}
 
 $name=$r['user_name'] ?: $r['participant_name'];
-$email=$r['user_email'] ?: 'N/A';
-$city=$r['user_city'] ?: 'N/A';
+$email=($r['user_email'] ?: ($r['participant_email'] ?? '')) ?: 'N/A';
+$city=($r['user_city'] ?: ($r['participant_city'] ?? '')) ?: 'N/A';
 $certNo='CS-'.str_pad((string)$id,6,'0',STR_PAD_LEFT);
 $issue=date('d M Y');
 $verifyUrl=OFFICIAL_DOMAIN.'certificate.php?result_id='.$id;

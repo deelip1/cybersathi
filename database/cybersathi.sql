@@ -16,6 +16,7 @@ CREATE TABLE users (
   mobile VARCHAR(20) NOT NULL,
   city VARCHAR(100) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  login_type ENUM('normal','google') DEFAULT 'normal',
   is_verified TINYINT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -62,6 +63,8 @@ CREATE TABLE quiz_results (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NULL,
   participant_name VARCHAR(120) NOT NULL,
+  participant_email VARCHAR(180),
+  participant_city VARCHAR(120),
   score INT NOT NULL,
   total_questions INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

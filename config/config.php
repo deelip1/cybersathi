@@ -13,6 +13,7 @@ define('RECAPTCHA_SECRET_KEY', getenv('RECAPTCHA_SECRET_KEY') ?: '');
 define('FIREBASE_API_KEY', getenv('FIREBASE_API_KEY') ?: '');
 define('FIREBASE_AUTH_DOMAIN', getenv('FIREBASE_AUTH_DOMAIN') ?: '');
 define('FIREBASE_PROJECT_ID', getenv('FIREBASE_PROJECT_ID') ?: '');
+define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID') ?: '');
 
 define('SUPER_ADMIN_EMAIL', getenv('SUPER_ADMIN_EMAIL') ?: 'superadmin@cybersathi.org');
 define('SUPER_ADMIN_DEFAULT_PASSWORD', getenv('SUPER_ADMIN_DEFAULT_PASSWORD') ?: 'super123');
