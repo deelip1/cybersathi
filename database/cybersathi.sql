@@ -16,6 +16,8 @@ CREATE TABLE users (
   mobile VARCHAR(20) NOT NULL,
   city VARCHAR(100) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  login_type ENUM('normal','google') DEFAULT 'normal',
+  is_verified TINYINT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE volunteers (
@@ -61,6 +63,8 @@ CREATE TABLE quiz_results (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NULL,
   participant_name VARCHAR(120) NOT NULL,
+  participant_email VARCHAR(180),
+  participant_city VARCHAR(120),
   score INT NOT NULL,
   total_questions INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -81,12 +85,14 @@ CREATE TABLE events (
   description TEXT NOT NULL,
   event_date DATE,
   location VARCHAR(150),
+  thumbnail VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE videos (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(180) NOT NULL,
   video_url VARCHAR(255) NOT NULL,
+  thumbnail VARCHAR(255),
   category VARCHAR(100) DEFAULT 'Awareness',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -120,6 +126,55 @@ CREATE TABLE email_logs (
   recipient_type VARCHAR(50) NOT NULL,
   recipients_count INT DEFAULT 0,
   status VARCHAR(50) DEFAULT 'queued',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE email_settings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  smtp_host VARCHAR(180),
+  smtp_port INT DEFAULT 587,
+  smtp_username VARCHAR(180),
+  smtp_password VARCHAR(255),
+  encryption VARCHAR(10) DEFAULT 'tls',
+  sender_email VARCHAR(180),
+  sender_name VARCHAR(180),
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+CREATE TABLE otp_verification (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(180),
+  otp_code VARCHAR(10),
+  expires_at DATETIME,
+  is_used TINYINT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE password_reset_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(180),
+  token VARCHAR(80),
+  expires_at DATETIME,
+  is_used TINYINT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE feedback (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120),
+  email VARCHAR(180),
+  message TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE fraud_patterns (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  pattern_type VARCHAR(80),
+  pattern_value VARCHAR(255),
+  frequency INT DEFAULT 1,
+  last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+CREATE TABLE fraud_reports (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  state_name VARCHAR(120),
+  city_name VARCHAR(120),
+  fraud_type VARCHAR(120),
+  count_reports INT DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

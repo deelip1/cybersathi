@@ -19,6 +19,9 @@ Book website: https://cybersathi.my.canva.site/
 
 ## Implemented Production Modules
 - User registration/login and role-based dashboards (User, Volunteer, Admin, Super Admin)
+- Google sign-in support (`google-login.php`) using Google Identity Services (`GOOGLE_CLIENT_ID`)
+- OTP email verification during registration (10-min expiry)
+- Captcha-protected login and forgot/reset password flow (30-min token expiry)
 - Cyber fraud complaint system with evidence upload + admin assignment to volunteers
 - Realtime live chat (Firebase + API fallback)
 - Login-protected quiz with timer, scoring and professional certificate generation (PDF)
@@ -26,7 +29,7 @@ Book website: https://cybersathi.my.canva.site/
 - Leaderboard (top quiz performers)
 - Live fraud alert system (homepage banner + scrolling ticker)
 - Cyber scam tools: SMS detection, WhatsApp text guidance, fake website checker, fraud phone DB
-- Email communication module (single/bulk target queue via PHPMailer integration hook)
+- Email communication module with SMTP settings (single/bulk send with PHPMailer/mail fallback)
 - Courses module with lessons/material links
 - WordPress-style admin dashboard and full super-admin controls
 - Mobile app compatible alert/leaderboard/course APIs
@@ -47,10 +50,11 @@ Book website: https://cybersathi.my.canva.site/
    - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`
    - `RECAPTCHA_SITE_KEY`, `RECAPTCHA_SECRET_KEY`
    - `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`
+   - `GOOGLE_CLIENT_ID` (for Google login)
 4. Serve with Apache/Nginx + PHP 8.1+.
 
 ## Key URLs
-- `/index.php`, `/complaint.php`, `/quiz.php`, `/leaderboard.php`, `/tools.php`, `/courses.php`
+- `/index.php`, `/complaint.php`, `/quiz.php`, `/leaderboard.php`, `/tools.php`, `/courses.php`, `/feedback.php`, `/verify-otp.php`
 - `/admin/login.php`, `/admin/index.php`
 - `/api/mobile/index.php`
 

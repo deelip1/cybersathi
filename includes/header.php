@@ -29,6 +29,7 @@
         <li class="nav-item"><a class="nav-link" href="/tools.php">Scam Tools</a></li>
         <li class="nav-item"><a class="nav-link" href="/courses.php">Courses</a></li>
         <li class="nav-item"><a class="nav-link" href="/media.php">Media</a></li>
+        <li class="nav-item"><a class="nav-link" href="/feedback.php">Feedback</a></li>
         <li class="nav-item"><a class="nav-link" href="/contact.php">Contact</a></li>
         <?php if (is_user_logged_in()): ?><li class="nav-item"><a class="nav-link" href="/user-dashboard.php">User Dashboard</a></li><?php endif; ?>
         <?php if (is_volunteer_logged_in()): ?><li class="nav-item"><a class="nav-link" href="/volunteer-dashboard.php">Volunteer Dashboard</a></li><?php endif; ?>

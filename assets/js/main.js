@@ -80,3 +80,32 @@
     fetchChat();
   }
 })();
+
+(() => {
+  const toggle = document.getElementById('aiChatToggle');
+  const panel = document.getElementById('aiChatPanel');
+  const body = document.getElementById('aiChatBody');
+  const input = document.getElementById('aiChatInput');
+  if (!toggle || !panel || !body || !input) return;
+
+  const answer = (q) => {
+    const t = q.toLowerCase();
+    if (t.includes('upi') || t.includes('payment')) return 'Immediately contact your bank, block UPI, and file complaint on cybercrime.gov.in and 1930 helpline.';
+    if (t.includes('otp')) return 'Never share OTP with anyone. Banks never ask OTP by call, SMS, or WhatsApp.';
+    if (t.includes('report')) return 'Collect evidence (screenshots, transaction ID, phone numbers) and report at cybercrime.gov.in.';
+    if (t.includes('loan') || t.includes('investment')) return 'Avoid unknown loan/investment links. Verify app ratings, company registration, and RBI warning lists.';
+    return 'Stay alert: do not share OTP/PIN, verify links, and report fraud at cybercrime.gov.in or helpline 1930.';
+  };
+
+  toggle.addEventListener('click', () => panel.classList.toggle('d-none'));
+  input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const q = input.value.trim();
+    if (!q) return;
+    body.innerHTML += `<div><strong>You:</strong> ${q}</div>`;
+    body.innerHTML += `<div class="text-primary"><strong>Cyber AI:</strong> ${answer(q)}</div>`;
+    input.value = '';
+    body.scrollTop = body.scrollHeight;
+  });
+})();
