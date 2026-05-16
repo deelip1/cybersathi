@@ -1,19 +1,41 @@
 <?php require_once __DIR__ . '/config/db.php';
-$message='';
+$message=''; $error='';
 if($_SERVER['REQUEST_METHOD']==='POST'){
-  $stmt=$pdo->prepare('INSERT INTO users(name,email,mobile,password_hash,city) VALUES(?,?,?,?,?)');
-  $stmt->execute([trim($_POST['name']),trim($_POST['email']),trim($_POST['mobile']),password_hash($_POST['password'], PASSWORD_BCRYPT),trim($_POST['city'])]);
-  $message='Registration successful. Please login.';
+  if(!validate_csrf_token($_POST['csrf_token'] ?? null)){ $error='Invalid CSRF token.'; }
+  elseif(!verify_recaptcha($_POST['g-recaptcha-response'] ?? null)){ $error='reCAPTCHA verification failed.'; }
+  else {
+    try {
+      $stmt=$pdo->prepare('INSERT INTO users(name,email,mobile,password_hash,city) VALUES(?,?,?,?,?)');
+      $stmt->execute([
+        trim($_POST['name']),
+        trim($_POST['email']),
+        trim($_POST['mobile']),
+        password_hash($_POST['password'], PASSWORD_BCRYPT),
+        trim($_POST['city'])
+      ]);
+
+      $_SESSION['user_id'] = (int)$pdo->lastInsertId();
+      $_SESSION['user_name'] = trim($_POST['name']);
+      header('Location: /quiz.php?welcome=1');
+      exit;
+    } catch(Throwable $e){
+      $error='Registration failed. Email may already exist.';
+    }
+  }
 }
 include __DIR__ . '/includes/header.php'; ?>
 <div class="container py-5"><h2>User Registration</h2>
+<p class="text-muted">After successful registration, you will be redirected to the Cyber Awareness Quiz automatically.</p>
 <?php if($message): ?><div class="alert alert-success"><?= e($message) ?></div><?php endif; ?>
+<?php if($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
 <form method="post" class="row g-3">
-  <div class="col-md-6"><input class="form-control" name="name" required placeholder="Name"></div>
+  <?= csrf_input() ?>
+  <div class="col-md-6"><input class="form-control" name="name" required placeholder="Full Name"></div>
   <div class="col-md-6"><input class="form-control" name="email" type="email" required placeholder="Email"></div>
   <div class="col-md-6"><input class="form-control" name="mobile" required placeholder="Mobile"></div>
   <div class="col-md-6"><input class="form-control" name="city" required placeholder="City"></div>
   <div class="col-md-6"><input class="form-control" name="password" type="password" required placeholder="Password"></div>
-  <div class="col-12"><button class="btn btn-primary">Register</button></div>
+  <?php if (RECAPTCHA_SITE_KEY !== ""): ?><div class="col-12"><div class="g-recaptcha" data-sitekey="<?= e(RECAPTCHA_SITE_KEY) ?>"></div></div><?php endif; ?>
+  <div class="col-12"><button class="btn btn-primary">Register & Start Quiz</button></div>
 </form></div>
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -8,3 +8,6 @@ uploads/*
 
 # Node / mobile
 mobile-app/node_modules/
+
+# Export bundles
+*.zip
