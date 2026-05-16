@@ -184,3 +184,41 @@ INSERT INTO admin(name,email,password_hash,role) VALUES
 
 INSERT INTO fraud_alerts(title,message,severity,is_active) VALUES
 ('Urgent Fraud Alert','Warning: Google Task Scam is increasing. Do not pay registration fees.','high',1);
+
+-- ✅ UPDATED: Enterprise RBAC + jurisdiction isolation foundation
+CREATE TABLE IF NOT EXISTS states (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS districts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  state_id INT NOT NULL,
+  name VARCHAR(120) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_state_district (state_id, name),
+  CONSTRAINT fk_district_state FOREIGN KEY (state_id) REFERENCES states(id) ON DELETE CASCADE
+);
+
+ALTER TABLE admin
+  MODIFY COLUMN role ENUM('super_admin','state_cyber_cell','district_cyber_cell','admin') DEFAULT 'admin';
+ALTER TABLE admin ADD COLUMN state_id INT NULL;
+ALTER TABLE admin ADD COLUMN district_id INT NULL;
+ALTER TABLE admin ADD CONSTRAINT fk_admin_state FOREIGN KEY (state_id) REFERENCES states(id) ON DELETE SET NULL;
+ALTER TABLE admin ADD CONSTRAINT fk_admin_district FOREIGN KEY (district_id) REFERENCES districts(id) ON DELETE SET NULL;
+
+ALTER TABLE users ADD COLUMN state_id INT NULL;
+ALTER TABLE users ADD COLUMN district_id INT NULL;
+ALTER TABLE users ADD CONSTRAINT fk_users_state FOREIGN KEY (state_id) REFERENCES states(id) ON DELETE SET NULL;
+ALTER TABLE users ADD CONSTRAINT fk_users_district FOREIGN KEY (district_id) REFERENCES districts(id) ON DELETE SET NULL;
+
+ALTER TABLE volunteers ADD COLUMN state_id INT NULL;
+ALTER TABLE volunteers ADD COLUMN district_id INT NULL;
+ALTER TABLE volunteers ADD CONSTRAINT fk_vol_state FOREIGN KEY (state_id) REFERENCES states(id) ON DELETE SET NULL;
+ALTER TABLE volunteers ADD CONSTRAINT fk_vol_district FOREIGN KEY (district_id) REFERENCES districts(id) ON DELETE SET NULL;
+
+ALTER TABLE complaints ADD COLUMN state_id INT NULL;
+ALTER TABLE complaints ADD COLUMN district_id INT NULL;
+ALTER TABLE complaints ADD CONSTRAINT fk_complaint_state FOREIGN KEY (state_id) REFERENCES states(id) ON DELETE SET NULL;
+ALTER TABLE complaints ADD CONSTRAINT fk_complaint_district FOREIGN KEY (district_id) REFERENCES districts(id) ON DELETE SET NULL;
