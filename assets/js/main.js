@@ -45,6 +45,7 @@
         snapshot.forEach((doc) => {
           const r = doc.data();
           box.innerHTML += `<div><strong>${escapeHtml(r.sender_name)}</strong>: ${escapeHtml(r.message)}</div>`;
+          box.innerHTML += `<div><strong>${r.sender_name}</strong>: ${r.message}</div>`;
         });
         box.scrollTop = box.scrollHeight;
       });
@@ -68,6 +69,7 @@
       const res = await fetch('/api/chat_fetch.php');
       const rows = await res.json();
       box.innerHTML = rows.map(r => `<div><strong>${escapeHtml(r.sender_name)}</strong>: ${escapeHtml(r.message)} <small class="text-muted">${escapeHtml(r.created_at)}</small></div>`).join('');
+      box.innerHTML = rows.map(r => `<div><strong>${r.sender_name}</strong>: ${r.message} <small class="text-muted">${r.created_at}</small></div>`).join('');
       box.scrollTop = box.scrollHeight;
     }
     form.addEventListener('submit', async (e) => {

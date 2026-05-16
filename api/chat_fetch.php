@@ -12,4 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $stmt = $pdo->query('SELECT sender_name, message, created_at FROM chat_messages ORDER BY id DESC LIMIT 30');
 $rows = $stmt->fetchAll();
 
+header('Content-Type: application/json');
+$rows=$pdo->query('SELECT sender_name,message,created_at FROM chat_messages ORDER BY id DESC LIMIT 30')->fetchAll();
 echo json_encode(array_reverse($rows));
