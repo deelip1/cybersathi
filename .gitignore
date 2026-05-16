@@ -1,0 +1,13 @@
+# Runtime database artifacts
+*.sqlite
+*.sqlite3
+
+# Upload artifacts
+uploads/*
+!uploads/.gitkeep
+
+# Node / mobile
+mobile-app/node_modules/
+
+# Export bundles
+*.zip
