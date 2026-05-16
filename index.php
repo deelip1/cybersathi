@@ -1,6 +1,12 @@
 <?php require_once __DIR__ . '/config/db.php'; include __DIR__ . '/includes/header.php';
 $scalar = function(string $sql, int $default = 0) use ($pdo): int { try { return (int)$pdo->query($sql)->fetchColumn(); } catch(Throwable $e){ return $default; } };
 $list = function(string $sql) use ($pdo): array { try { return $pdo->query($sql)->fetchAll(); } catch(Throwable $e){ return []; } };
+$scalar = function(string $sql, int $default = 0) use ($pdo): int {
+  try { return (int)$pdo->query($sql)->fetchColumn(); } catch(Throwable $e){ return $default; }
+};
+$list = function(string $sql) use ($pdo): array {
+  try { return $pdo->query($sql)->fetchAll(); } catch(Throwable $e){ return []; }
+};
 $stats=[
   'helped'=>$scalar('SELECT COUNT(*) FROM complaints'),
   'volunteers'=>$scalar('SELECT COUNT(*) FROM volunteers WHERE approval_status="approved"'),
