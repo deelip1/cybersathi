@@ -2,6 +2,7 @@
 <div class="container py-5">
   <h2>Cyber Fraud Help</h2>
   <?php if(isset($_GET["success"])): ?><div class="alert alert-success">Complaint submitted successfully.</div><?php endif; ?>
+  <?php if(isset($_GET["error"])): ?><div class="alert alert-danger"><?= e($_GET["error"]) ?></div><?php endif; ?>
   <form method="post" action="/api/complaint_submit.php" enctype="multipart/form-data" class="row g-3">
     <?= csrf_input() ?>
     <div class="col-md-6"><input name="name" class="form-control" required placeholder="Name"></div>

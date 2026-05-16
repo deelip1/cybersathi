@@ -1,3 +1,122 @@
+<?php
+require_once __DIR__ . '/../config/db.php';
+ensure_admin();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !validate_csrf_token($_POST['csrf_token'] ?? null)) {
+    http_response_code(419);
+    exit('Invalid CSRF token');
+}
+
+function normalize_severity(string $value): string
+{
+    $allowed = ['low', 'medium', 'high'];
+    $value = strtolower(trim($value));
+    return in_array($value, $allowed, true) ? $value : 'low';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_volunteer'])) {
+    $volunteerId = (int)($_POST['approve_volunteer'] ?? 0);
+    if ($volunteerId > 0) {
+        $pdo->prepare('UPDATE volunteers SET approval_status = "approved" WHERE id = ?')->execute([$volunteerId]);
+        $vs = $pdo->prepare('SELECT id, name, email FROM volunteers WHERE id = ?');
+        $vs->execute([$volunteerId]);
+        $volunteer = $vs->fetch();
+
+        if ($volunteer) {
+            $smtp = get_email_settings($pdo);
+            $body = 'Dear ' . e($volunteer['name']) . ',<br>Welcome to Cyber Sathi.<br><br>Your account has been approved.<br><br>'
+                . 'Please sign in using your registered email and the password you set during volunteer registration.<br><br>'
+                . 'Login Here: <a href="' . OFFICIAL_DOMAIN . 'volunteer-login.php">Volunteer Login</a><br><br>Regards<br>Cyber Sathi Team';
+            send_mail_smart($smtp, $volunteer['email'], $volunteer['name'], 'Welcome to Cyber Sathi', $body);
+        }
+    }
+
+    header('Location: /admin/index.php#volunteers');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_case'])) {
+    $pdo->prepare('UPDATE complaints SET assigned_to = ?, status = "in_progress" WHERE id = ?')
+        ->execute([(int)$_POST['volunteer_id'], (int)$_POST['complaint_id']]);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_event'])) {
+    $pdo->prepare('INSERT INTO events(event_type, title, description, event_date, location) VALUES(?, ?, ?, ?, ?)')
+        ->execute([
+            trim((string)$_POST['event_type']),
+            trim((string)$_POST['title']),
+            trim((string)$_POST['description']),
+            (string)$_POST['event_date'],
+            trim((string)$_POST['location']),
+        ]);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_alert'])) {
+    $pdo->prepare('INSERT INTO fraud_alerts(title, message, severity, is_active) VALUES(?, ?, ?, 1)')
+        ->execute([
+            trim((string)$_POST['title']),
+            trim((string)$_POST['message']),
+            normalize_severity((string)$_POST['severity']),
+        ]);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_email_settings'])) {
+    $pdo->prepare('INSERT INTO email_settings(smtp_host, smtp_port, smtp_username, smtp_password, encryption, sender_email, sender_name) VALUES(?, ?, ?, ?, ?, ?, ?)')
+        ->execute([
+            trim((string)$_POST['smtp_host']),
+            (int)$_POST['smtp_port'],
+            trim((string)$_POST['smtp_username']),
+            trim((string)$_POST['smtp_password']),
+            trim((string)$_POST['encryption']),
+            trim((string)$_POST['sender_email']),
+            trim((string)$_POST['sender_name']),
+        ]);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_admin'])) {
+    if (!is_super_admin_logged_in()) {
+        http_response_code(403);
+        exit('Only super admin can create admins');
+    }
+
+    $pdo->prepare('INSERT INTO admin(name, email, password_hash, role) VALUES(?, ?, ?, ?)')
+        ->execute([
+            trim((string)$_POST['name']),
+            trim((string)$_POST['email']),
+            password_hash((string)$_POST['password'], PASSWORD_BCRYPT),
+            trim((string)$_POST['role']) === 'super_admin' ? 'super_admin' : 'admin',
+        ]);
+}
+
+$qall = static function (string $sql) use ($pdo): array {
+    try {
+        return $pdo->query($sql)->fetchAll();
+    } catch (Throwable $e) {
+        return [];
+    }
+};
+$qscalar = static function (string $sql) use ($pdo): int {
+    try {
+        return (int)$pdo->query($sql)->fetchColumn();
+    } catch (Throwable $e) {
+        return 0;
+    }
+};
+
+$complaints = $qall('SELECT * FROM complaints ORDER BY id DESC');
+$pending = $qall('SELECT * FROM volunteers WHERE approval_status = "pending"');
+$approved = $qall('SELECT * FROM volunteers WHERE approval_status = "approved"');
+$usersRows = $qall('SELECT id, name, email, city, is_verified FROM users ORDER BY id DESC LIMIT 20');
+$alerts = $qall('SELECT * FROM fraud_alerts ORDER BY id DESC LIMIT 10');
+$admins = $qall('SELECT id, name, email, role FROM admin ORDER BY id DESC');
+$emails = $qall('SELECT * FROM email_logs ORDER BY id DESC LIMIT 10');
+$leaderboard = $qall('SELECT participant_name, MAX(score) AS score FROM quiz_results GROUP BY participant_name ORDER BY score DESC LIMIT 10');
+$feedbackRows = $qall('SELECT * FROM feedback ORDER BY id DESC LIMIT 20');
+$patternRows = $qall('SELECT fraud_type, COUNT(*) AS c FROM complaints GROUP BY fraud_type ORDER BY c DESC LIMIT 5');
+$emailSettings = get_email_settings($pdo);
+
+include __DIR__ . '/../includes/header.php';
+?>
 <?php require_once __DIR__ . '/../config/db.php'; ensure_admin();
 if($_SERVER['REQUEST_METHOD']==='POST' && !validate_csrf_token($_POST['csrf_token'] ?? null)){ http_response_code(419); exit('Invalid CSRF token'); }
 
@@ -50,6 +169,7 @@ include __DIR__ . '/../includes/header.php'; ?>
 
 <h4 id="users">Recent Users</h4><div class="table-responsive"><table class="table table-sm table-striped"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>City</th><th>Verified</th></tr></thead><tbody><?php foreach($usersRows as $u): ?><tr><td><?= (int)$u['id'] ?></td><td><?= e($u['name']) ?></td><td><?= e($u['email']) ?></td><td><?= e($u['city']) ?></td><td><?= (int)$u['is_verified']===1?'Yes':'No' ?></td></tr><?php endforeach; ?></tbody></table></div>
 
+<h4 id="volunteers" class="mt-4">Approve Volunteers</h4><?php foreach($pending as $p): ?><div class="card p-2 mb-2"><?= e($p['name']) ?> (<?= e($p['email']) ?>) <form method="post" class="d-inline"><?= csrf_input() ?><button class="btn btn-sm btn-success" type="submit" name="approve_volunteer" value="<?= (int)$p['id'] ?>">Approve & Send Welcome Email</button></form></div><?php endforeach; ?>
 <h4 id="volunteers" class="mt-4">Approve Volunteers</h4><?php foreach($pending as $p): ?><div class="card p-2 mb-2"><?= e($p['name']) ?> (<?= e($p['email']) ?>) <a class="btn btn-sm btn-success" href="?approve_volunteer=<?= (int)$p['id'] ?>&csrf_token=<?= e(csrf_token()) ?>">Approve & Send Welcome Email</a></div><?php endforeach; ?>
 <h4 id="complaints" class="mt-4">Assign Complaints</h4><form method="post" class="row g-2"><?= csrf_input() ?><input type="hidden" name="assign_case" value="1"><div class="col-md-5"><select name="complaint_id" class="form-select"><?php foreach($complaints as $c): ?><option value="<?= (int)$c['id'] ?>">#<?= (int)$c['id'] ?> <?= e($c['user_name']) ?> - <?= e($c['fraud_type']) ?></option><?php endforeach; ?></select></div><div class="col-md-5"><select name="volunteer_id" class="form-select"><?php foreach($approved as $v): ?><option value="<?= (int)$v['id'] ?>"><?= e($v['name']) ?></option><?php endforeach; ?></select></div><div class="col-md-2"><button class="btn btn-primary w-100">Assign</button></div></form>
 

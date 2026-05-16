@@ -23,6 +23,8 @@
 
   const ready = firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId;
 
+  const escapeHtml = (str) => String(str).replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+
   async function sendLocalFallback(sender, message) {
     await fetch('/api/chat_send.php', {
       method: 'POST',
@@ -42,6 +44,7 @@
         box.innerHTML = '';
         snapshot.forEach((doc) => {
           const r = doc.data();
+          box.innerHTML += `<div><strong>${escapeHtml(r.sender_name)}</strong>: ${escapeHtml(r.message)}</div>`;
           box.innerHTML += `<div><strong>${r.sender_name}</strong>: ${r.message}</div>`;
         });
         box.scrollTop = box.scrollHeight;
@@ -65,6 +68,7 @@
     async function fetchChat() {
       const res = await fetch('/api/chat_fetch.php');
       const rows = await res.json();
+      box.innerHTML = rows.map(r => `<div><strong>${escapeHtml(r.sender_name)}</strong>: ${escapeHtml(r.message)} <small class="text-muted">${escapeHtml(r.created_at)}</small></div>`).join('');
       box.innerHTML = rows.map(r => `<div><strong>${r.sender_name}</strong>: ${r.message} <small class="text-muted">${r.created_at}</small></div>`).join('');
       box.scrollTop = box.scrollHeight;
     }
@@ -107,5 +111,61 @@
     body.innerHTML += `<div class="text-primary"><strong>Cyber AI:</strong> ${answer(q)}</div>`;
     input.value = '';
     body.scrollTop = body.scrollHeight;
+  });
+})();
+
+
+(() => {
+  const form = document.getElementById('scamAnalyzerForm');
+  const input = document.getElementById('scamInput');
+  const result = document.getElementById('analyzerResult');
+  const clearBtn = document.getElementById('clearAnalyzerBtn');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  if (!form || !input || !result || !analyzeBtn) return;
+
+  const label = analyzeBtn.querySelector('.btn-label');
+  const spinner = analyzeBtn.querySelector('.spinner-border');
+  const rules = [
+    { keywords: ['otp', 'pin', 'cvv', 'password'], risk: 'High risk: credential theft pattern detected.' },
+    { keywords: ['upi', 'collect request', 'qr code', 'screen share'], risk: 'High risk: payment redirection / social engineering signs found.' },
+    { keywords: ['loan app', 'instant loan', 'investment', 'double money'], risk: 'Medium-High risk: financial scam language detected.' },
+    { keywords: ['kyc', 'account blocked', 'urgent', 'suspend'], risk: 'Medium risk: urgency-pressure scam indicators detected.' },
+  ];
+
+  const setLoading = (isLoading) => {
+    analyzeBtn.disabled = isLoading;
+    if (label) label.textContent = isLoading ? 'Analyzing...' : 'Analyze Risk';
+    if (spinner) spinner.classList.toggle('d-none', !isLoading);
+  };
+
+  const analyzeText = (text) => {
+    const lower = text.toLowerCase();
+    const matched = rules.filter((rule) => rule.keywords.some((k) => lower.includes(k)));
+    if (matched.length === 0) {
+      return 'Low-Medium risk: No strong scam keywords found, but still verify identity, links, and requests before acting.';
+    }
+    return matched.map((m) => m.risk).join(' ');
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    setLoading(true);
+    result.className = 'alert alert-info mt-3';
+    result.classList.remove('d-none');
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      const guidance = analyzeText(text);
+      result.innerHTML = `<strong>AI Risk Summary:</strong> ${escapeHtml(guidance)}<br><small class="text-muted">Action: Call 1930 and report on cybercrime.gov.in if fraud is suspected.</small>`;
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    input.value = '';
+    result.textContent = '';
+    result.classList.add('d-none');
   });
 })();
