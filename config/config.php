@@ -78,4 +78,49 @@ function send_mail_smart(array $smtp, string $to, string $toName, string $subjec
     }
     $headers = "MIME-Version: 1.0\r\nContent-type:text/html;charset=UTF-8\r\nFrom: ".PRIMARY_EMAIL."\r\n";
     return @mail($to, $subject, $bodyHtml, $headers);
+function ensure_super_admin(): void { if (!is_super_admin_logged_in()) { header('Location: /admin/index.php'); exit; } }
+function ensure_user(): void { if (!is_user_logged_in()) { header('Location: /login.php'); exit; } }
+function ensure_volunteer(): void { if (!is_volunteer_logged_in()) { header('Location: /volunteer-login.php'); exit; } }
+function e(string $v): string { return htmlspecialchars($v, ENT_QUOTES, 'UTF-8'); }
+
+function csrf_token(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_input(): string {
+    return '<input type="hidden" name="csrf_token" value="' . e(csrf_token()) . '">';
+}
+
+function validate_csrf_token(?string $token): bool {
+    return isset($_SESSION['csrf_token']) && is_string($token) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+function verify_recaptcha(?string $responseToken): bool {
+    if (RECAPTCHA_SECRET_KEY === '') {
+        return true;
+    }
+    if (!$responseToken) {
+        return false;
+    }
+    $payload = http_build_query([
+        'secret' => RECAPTCHA_SECRET_KEY,
+        'response' => $responseToken,
+        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? ''
+    ]);
+    $opts = [
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+            'content' => $payload,
+            'timeout' => 10,
+        ],
+    ];
+    $context = stream_context_create($opts);
+    $result = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
+    if ($result === false) return false;
+    $json = json_decode($result, true);
+    return !empty($json['success']);
 }
